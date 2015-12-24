@@ -27,6 +27,7 @@
 
 @property (nonatomic, retain) AVAudioPlayer *audioPlayer;
 @property (nonatomic, retain) NSTimer *timer;
+@property (nonatomic, retain) NSOperationQueue *downloadDataQueue;
 
 @property (nonatomic, assign) BOOL albumLogoAdjusted;
 
@@ -45,9 +46,10 @@
     self.songSlider.enabled = NO;;
     self.playButton.enabled = NO;
     
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    self.downloadDataQueue = [[NSOperationQueue alloc] init];
+    [self.downloadDataQueue addOperationWithBlock:^{
         [self preparePlayer];
-    });
+    }];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -68,7 +70,9 @@
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
     
+    [self.downloadDataQueue cancelAllOperations];
     [self.audioPlayer stop];
+    self.audioPlayer.delegate = nil;
     [self.timer invalidate];
 }
 
@@ -140,23 +144,23 @@
         [MLCUtilities showAlert:nil message:NSLocalizedString(@"music.player.download.error", nil) presenter:self];
     } else {
         dispatch_async(dispatch_get_main_queue(), ^{
+            if (self.isBeingDismissed)
+                return;
+            
             self.songSlider.enabled = YES;
             self.playButton.enabled = YES;
             
             [self updateSlider];
+            [self play];
         });
-        
-        [self play];
     }
 }
 
 - (void)play {
     if (![self.audioPlayer isPlaying]) {
         [self.audioPlayer play];
-        dispatch_async(dispatch_get_main_queue(), ^{
-            self.timer = [NSTimer scheduledTimerWithTimeInterval:0.1f target:self selector:@selector(updateSlider) userInfo:nil repeats:YES];
-            [self updatePlayButton];
-        });
+        self.timer = [NSTimer scheduledTimerWithTimeInterval:0.1f target:self selector:@selector(updateSlider) userInfo:nil repeats:YES];
+        [self updatePlayButton];
     }
 }
 
@@ -182,7 +186,7 @@
 }
 
 - (void)audioPlayerDecodeErrorDidOccur:(AVAudioPlayer *)player error:(NSError * __nullable)error {
-    
+    [MLCUtilities showAlert:nil message:NSLocalizedString(@"music.player.decode.error", nil) presenter:self];
 }
 
 @end

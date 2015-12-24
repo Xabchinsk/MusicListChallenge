@@ -1,6 +1,7 @@
 
 "music.list.title" = "Музыка";
 "music.player.download.error" = "К сожалению что-то пошло не так в процессе загрузки, попробуйте другую мелодию";
+"music.player.decode.error" = "Не удалось декодировать аудио поток";
 
 "common.close" = "Закрыть";
 "common.error" = "Ошибка";

@@ -19,8 +19,13 @@
 }
 
 - (BOOL)isEqual:(id)object {
-    return ([object isKindOfClass:[self class]] &&
-            ((MLCMelody*)object).identifier == self.identifier &&
+    if (self == object)
+        return YES;
+    
+    if (![object isKindOfClass:[self class]])
+        return NO;
+    
+    return (((MLCMelody*)object).identifier == self.identifier &&
             [[object title] isEqualToString:self.title] &&
             [[object artist] isEqualToString:self.artist] &&
             [[object picUrl] isEqualToString:self.picUrl] &&
